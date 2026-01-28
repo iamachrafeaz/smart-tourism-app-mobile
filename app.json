@@ -3,6 +3,9 @@
     "name": "myapp",
     "slug": "myapp",
     "version": "1.0.0",
+    "extra": {
+      "apiUrl": "http://192.168.11.107:50000"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -38,7 +41,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "react-native-vision-camera"
     ],
     "experiments": {
       "typedRoutes": true,
