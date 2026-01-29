@@ -243,7 +243,7 @@ export default function DiscoverExperiences() {
             renderItem={({ item }) => (
               <ExperienceCard
                 experience={item}
-                onPress={() => router.push(`/experiences/${item.id}`)}
+                onPress={() => router.push(`/(experiences)/${item.id}`)}
                 onDirectionsPress={() =>
                   openMap({
                     lat: item.coordinates.lat,

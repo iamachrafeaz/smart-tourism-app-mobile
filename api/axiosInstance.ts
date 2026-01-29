@@ -1,4 +1,5 @@
 // src/api/axiosInstance.ts
+import { getAccessToken } from "@/storage/token.storage";
 import axios from "axios";
 import Constants from "expo-constants";
 
@@ -12,8 +13,8 @@ const axiosInstance = axios.create({
 
 // Request interceptor (optional, e.g., add auth token)
 axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NjA0OGRlOTVmOTAzNmExMWM5OTlkZCIsInJvbGUiOiJUT1VSSVNUIiwiaWF0IjoxNzY5NjA5MTM3LCJleHAiOjE3OTU1MjkxMzd9.on0kZYAdA1tnJrggbZ9eJiFiRww7ETSCDnb26iAkYPA";
+    async (config) => {
+        const token = await getAccessToken();
         if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     },

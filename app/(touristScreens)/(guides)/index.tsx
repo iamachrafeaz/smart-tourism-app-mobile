@@ -146,7 +146,7 @@ export default function GuidesMarketplace() {
           renderItem={({ item: guide }) => (
             <GuideCard
               guide={guide} // Ensure GuideCard uses text-white/bg-[#222] styles internally
-              onPress={() => router.push(`/guides/${guide.id}`)}
+              onPress={() => router.push(`/(guides)/${guide.id}`)}
             />
           )}
           ListEmptyComponent={

@@ -1,9 +1,8 @@
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import {
   ArrowLeft,
   Bot,
   MoreVertical,
-  Paperclip,
   Send,
   Sparkles,
   User,
@@ -13,7 +12,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -21,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // --- Types ---
 interface Message {
@@ -31,7 +30,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
 
   const [inputText, setInputText] = useState("");
@@ -128,7 +127,7 @@ export default function ChatScreen() {
         {/* --- Header --- */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
             style={styles.iconButton}
           >
             <ArrowLeft color="white" size={24} />
@@ -176,10 +175,6 @@ export default function ChatScreen() {
           {/* --- Input Area --- */}
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-              <TouchableOpacity style={styles.attachButton}>
-                <Paperclip size={20} color="#666" />
-              </TouchableOpacity>
-
               <TextInput
                 style={styles.input}
                 placeholder="Ask about your trip..."

@@ -26,7 +26,7 @@ export default function PostCard({
     handleLike(item);
   };
   return (
-    <Pressable onPress={() => router.push(`/hub/${item.id}`)}>
+    <Pressable onPress={() => router.push(`/(hub)/${item.id}`)}>
       <View style={styles.card}>
         {/* Card Header: Author */}
         <View style={styles.cardHeader}>
