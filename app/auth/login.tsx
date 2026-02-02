@@ -1,13 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  User,
-  X,
-} from "lucide-react-native";
+import useAuth from "@/hooks/useAuth";
+import { useRouter } from "expo-router";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Keyboard,
@@ -23,21 +16,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function SignUpScreen() {
-  const navigation = useNavigation();
-
-  const [name, setName] = useState("");
+export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log("Registered:", name, email);
-    }, 1500);
+  const router = useRouter();
+  const { login, error, isLoading } = useAuth();
+
+  const handleLogin = async () => {
+    await login(email, password);
   };
 
   return (
@@ -50,41 +38,18 @@ export default function SignUpScreen() {
             style={{ flex: 1 }}
           >
             <View style={styles.content}>
-              {/* Header */}
+              {/* Header / Logo Area */}
               <View style={styles.header}>
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                  style={styles.closeButton}
-                >
-                  <X color="rgba(255,255,255,0.5)" size={24} />
-                </TouchableOpacity>
-
                 <View style={styles.titleContainer}>
-                  <Text style={styles.welcomeText}>Create Account</Text>
+                  <Text style={styles.welcomeText}>Welcome Back</Text>
                   <Text style={styles.subtitleText}>
-                    Join the community and start your Moroccan adventure.
+                    Sign in to continue your journey through Morocco.
                   </Text>
                 </View>
               </View>
 
               {/* Form Area */}
               <View style={styles.formContainer}>
-                {/* Name Input (New) */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <View style={styles.inputWrapper}>
-                    <User color="#666" size={20} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="John Doe"
-                      placeholderTextColor="#555"
-                      value={name}
-                      onChangeText={setName}
-                      autoCapitalize="words"
-                    />
-                  </View>
-                </View>
-
                 {/* Email Input */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Email Address</Text>
@@ -110,7 +75,7 @@ export default function SignUpScreen() {
                     <Lock color="#666" size={20} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Create a password"
+                      placeholder="Enter your password"
                       placeholderTextColor="#555"
                       value={password}
                       onChangeText={setPassword}
@@ -129,21 +94,21 @@ export default function SignUpScreen() {
                   </View>
                 </View>
 
-                {/* Terms Text */}
-                <Text style={styles.termsText}>
-                  By signing up, you agree to our{" "}
-                  <Text style={styles.linkText}>Terms</Text> and{" "}
-                  <Text style={styles.linkText}>Privacy Policy</Text>.
-                </Text>
+                {/* Forgot Password */}
+                <TouchableOpacity style={styles.forgotButton}>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
 
-                {/* Primary Action: Sign Up */}
+                {error && <Text style={styles.errorText}>{error}</Text>}
+
+                {/* Login Button */}
                 <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={handleSignUp}
+                  style={styles.loginButton}
+                  onPress={handleLogin}
                   disabled={isLoading}
                 >
-                  <Text style={styles.primaryButtonText}>
-                    {isLoading ? "Creating Account..." : "Sign Up"}
+                  <Text style={styles.loginButtonText}>
+                    {isLoading ? "Signing In..." : "Log In"}
                   </Text>
                   {!isLoading && (
                     <ArrowRight
@@ -153,17 +118,13 @@ export default function SignUpScreen() {
                     />
                   )}
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.signupButton}
+                  onPress={() => router.push("/auth/registration/start")}
+                >
+                  <Text style={styles.signupButtonText}>Create an Account</Text>
+                </TouchableOpacity>
               </View>
-
-              {/* Footer: Navigate to Login */}
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => navigation.navigate("Login" as never)}
-              >
-                <Text style={styles.secondaryButtonText}>
-                  Already have an account? Log In
-                </Text>
-              </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -186,7 +147,7 @@ const styles = StyleSheet.create({
   /* Header */
   header: {
     marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 40,
   },
   closeButton: {
     alignSelf: "flex-start",
@@ -248,20 +209,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  termsText: {
-    color: "#666",
-    fontSize: 12,
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 18,
+  forgotButton: {
+    alignSelf: "flex-end",
+    marginBottom: 30,
   },
-  linkText: {
-    color: "#f97316",
+  forgotText: {
+    color: "#f97316", // Orange accent
+    fontSize: 14,
     fontWeight: "600",
   },
 
-  /* Primary Button (Orange) */
-  primaryButton: {
+  /* Primary Button */
+  loginButton: {
     backgroundColor: "#f97316",
     borderRadius: 16,
     height: 56,
@@ -274,26 +233,31 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  primaryButtonText: {
+  loginButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-
-  /* Secondary Button (Dark) */
-  secondaryButton: {
-    backgroundColor: "#222",
+  signupButton: {
+    backgroundColor: "#222", // Dark surface to differentiate from Primary Orange
     borderRadius: 16,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    marginTop: 24,
+    borderColor: "rgba(255,255,255,0.1)", // Subtle border
+    marginTop: 24, // Spacing from the element above
   },
-  secondaryButtonText: {
+  signupButtonText: {
     color: "white",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
+  },
+  errorText: {
+    color: "#ff4d4f", // Red color for error
+    marginBottom: 12,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

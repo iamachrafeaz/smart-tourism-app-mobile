@@ -1,6 +1,7 @@
-import useAuth from "@/hooks/useAuth";
+import { startRegisteringRequest } from "@/api/authService";
+import { saveRegistrationToken } from "@/storage/token.storage";
 import { useRouter } from "expo-router";
-import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Keyboard,
@@ -16,16 +17,72 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function LoginScreen() {
+export default function SignUpScreen() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter();
-  const { login, error, isLoading } = useAuth();
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleLogin = async () => {
-    await login(email, password);
+  const isValidPassword = (password: string) =>
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?.&])[A-Za-z\d@$!.%*?&]{8,}$/.test(
+      password,
+    );
+
+  const handleSignUp = async () => {
+    setError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      setError(
+        "Password must be at least 8 characters, include a letter, a number, and a special character.",
+      );
+      return;
+    }
+
+    if (isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await startRegisteringRequest(email.trim(), password);
+      await saveRegistrationToken(response.data.registrationToken);
+      setIsLoading(false);
+      router.replace({
+        pathname: "/auth/registration/otp-verification",
+        params: { email: email.trim() },
+      });
+    } catch (error: any) {
+      const message = error.message || "Something went wrong.";
+      setError(message);
+      setIsLoading(false);
+    }
+  };
+
+  const onEmailChange = (text: string) => {
+    if (error) setError(null);
+    setEmail(text);
+  };
+
+  const onPasswordChange = (text: string) => {
+    if (error) setError(null);
+    setPassword(text);
   };
 
   return (
@@ -38,12 +95,19 @@ export default function LoginScreen() {
             style={{ flex: 1 }}
           >
             <View style={styles.content}>
-              {/* Header / Logo Area */}
+              {/* Header */}
               <View style={styles.header}>
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  style={styles.closeButton}
+                >
+                  <X color="rgba(255,255,255,0.5)" size={24} />
+                </TouchableOpacity>
+
                 <View style={styles.titleContainer}>
-                  <Text style={styles.welcomeText}>Welcome Back</Text>
+                  <Text style={styles.welcomeText}>Create Account</Text>
                   <Text style={styles.subtitleText}>
-                    Sign in to continue your journey through Morocco.
+                    Join the community and start your Moroccan adventure.
                   </Text>
                 </View>
               </View>
@@ -60,7 +124,7 @@ export default function LoginScreen() {
                       placeholder="hello@example.com"
                       placeholderTextColor="#555"
                       value={email}
-                      onChangeText={setEmail}
+                      onChangeText={onEmailChange}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       autoCorrect={false}
@@ -75,10 +139,10 @@ export default function LoginScreen() {
                     <Lock color="#666" size={20} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter your password"
+                      placeholder="Create a password"
                       placeholderTextColor="#555"
                       value={password}
-                      onChangeText={setPassword}
+                      onChangeText={onPasswordChange}
                       secureTextEntry={!showPassword}
                     />
                     <TouchableOpacity
@@ -93,22 +157,16 @@ export default function LoginScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
+                {error && <Text style={styles.error}>{error}</Text>}
 
-                {/* Forgot Password */}
-                <TouchableOpacity style={styles.forgotButton}>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-
-                {error && <Text style={styles.errorText}>{error}</Text>}
-
-                {/* Login Button */}
+                {/* Primary Action: Sign Up */}
                 <TouchableOpacity
-                  style={styles.loginButton}
-                  onPress={handleLogin}
+                  style={styles.primaryButton}
+                  onPress={handleSignUp}
                   disabled={isLoading}
                 >
-                  <Text style={styles.loginButtonText}>
-                    {isLoading ? "Signing In..." : "Log In"}
+                  <Text style={styles.primaryButtonText}>
+                    {isLoading ? "Creating Account..." : "Sign Up"}
                   </Text>
                   {!isLoading && (
                     <ArrowRight
@@ -117,12 +175,6 @@ export default function LoginScreen() {
                       style={{ marginLeft: 8 }}
                     />
                   )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.signupButton}
-                  onPress={() => router.push("/sign-in")}
-                >
-                  <Text style={styles.signupButtonText}>Create an Account</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -143,11 +195,17 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: "space-between",
   },
+  error: {
+    color: "red",
+    marginBottom: 12,
+    textAlign: "center",
+    fontWeight: "600",
+  },
 
   /* Header */
   header: {
     marginTop: 10,
-    marginBottom: 40,
+    marginBottom: 30,
   },
   closeButton: {
     alignSelf: "flex-start",
@@ -209,18 +267,20 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  forgotButton: {
-    alignSelf: "flex-end",
-    marginBottom: 30,
+  termsText: {
+    color: "#666",
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 18,
   },
-  forgotText: {
-    color: "#f97316", // Orange accent
-    fontSize: 14,
+  linkText: {
+    color: "#f97316",
     fontWeight: "600",
   },
 
-  /* Primary Button */
-  loginButton: {
+  /* Primary Button (Orange) */
+  primaryButton: {
     backgroundColor: "#f97316",
     borderRadius: 16,
     height: 56,
@@ -233,31 +293,26 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  loginButtonText: {
+  primaryButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
   },
-  signupButton: {
-    backgroundColor: "#222", // Dark surface to differentiate from Primary Orange
+
+  /* Secondary Button (Dark) */
+  secondaryButton: {
+    backgroundColor: "#222",
     borderRadius: 16,
     height: 56,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)", // Subtle border
-    marginTop: 24, // Spacing from the element above
+    borderColor: "rgba(255,255,255,0.1)",
+    marginTop: 24,
   },
-  signupButtonText: {
+  secondaryButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
-  },
-  errorText: {
-    color: "#ff4d4f", // Red color for error
-    marginBottom: 12,
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
   },
 });

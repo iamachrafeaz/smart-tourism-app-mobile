@@ -37,7 +37,7 @@ function RootNavigator() {
         <Stack.Screen name="(touristScreens)" />
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="auth" />
       </Stack.Protected>
     </Stack>
   );

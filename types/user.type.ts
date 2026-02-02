@@ -1,8 +1,13 @@
 export interface User {
     id: string;
-    role: "GUIDE" | "TOURIST";
+    role: UserRoleEnum;
     firstName: string;
     lastName: string;
     email: string;
     profilePictureUrl: string;
+}
+
+export enum UserRoleEnum {
+    "GUIDE",
+    "TOURIST"
 }

@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: Props) => {
       setIsLoading(true);
       setError(null);
 
-      const response = await authService.loginService(email, password);
+      const response = await authService.loginRequest(email, password);
 
       if (!response.success) throw new Error("Login failed");
 
@@ -43,8 +43,8 @@ export const AuthProvider = ({ children }: Props) => {
 
       const me = await authService.getMe();
       setUser(me.user);
-    } catch (e) {
-      setError("Error logging you in, try later!");
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setIsLoading(false);
     }

@@ -42,7 +42,8 @@
           }
         }
       ],
-      "react-native-vision-camera"
+      "react-native-vision-camera",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
