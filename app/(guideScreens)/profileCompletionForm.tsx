@@ -1,6 +1,6 @@
+import * as guideService from "@/api/guideService";
 import { CITIES, EXPERTISE, LANGUAGES } from "@/data/mockData";
 import { useCamera } from "@/hooks/useCamera";
-import { UploadAction } from "@/types/uploadAction";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -17,7 +17,7 @@ import {
   User,
   X,
 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -36,10 +36,7 @@ import UploadTypeModal from "../(modals)/uploadModal";
 
 export default function GuideProfileScreen() {
   const router = useRouter();
-  const { photo, setPhoto } = useCamera();
-
-  const [permissionResponse, requestPermission] =
-    ImagePicker.useMediaLibraryPermissions();
+  const { openCamera } = useCamera();
 
   const [fee, setFee] = useState("");
   const [city, setCity] = useState("Marrakech");
@@ -48,13 +45,18 @@ export default function GuideProfileScreen() {
   const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
 
-  const [selectedUploadType, setSelectedUploadType] =
-    useState<UploadAction | null>(null);
-
-  const [selfieUri, setSelfieUri] = useState<string | null>(null);
-  const [idUri, setIdUri] = useState<string | null>(null);
+  const [selfieUri, setSelfieUri] = useState<{
+    name: string;
+    type: string;
+    uri: string;
+  } | null>(null);
+  const [idUri, setIdUri] = useState<{
+    name: string;
+    type: string;
+    uri: string;
+  } | null>(null);
   const [certifications, setCertifications] = useState<
-    { name: string; uri: string; id: string }[]
+    { name: string; uri: string; id: string; type: string }[]
   >([]);
 
   const [activeModal, setActiveModal] = useState<
@@ -64,80 +66,6 @@ export default function GuideProfileScreen() {
   const [showUploadTypeModal, setShowUploadTypeModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (selectedUploadType == null || !photo) return;
-    if (selectedUploadType.doc == "id") {
-      setIdUri(photo.uri);
-    } else if (selectedUploadType.doc == "selfie") {
-      setSelfieUri(photo.uri);
-    } else if (selectedUploadType.doc == "certification") {
-      setCertifications((prev) => [
-        ...prev,
-        {
-          name: "Picture",
-          uri: photo.uri,
-          id: Date.now().toString(),
-        },
-      ]);
-    }
-    setSelectedUploadType(null);
-    setPhoto(null);
-  }, [photo, selectedUploadType]);
-
-  useEffect(() => {
-    if (selectedUploadType == null) return;
-    handleCloseUploadTypeModal();
-    switch (selectedUploadType.method) {
-      case "camera":
-        router.navigate({
-          pathname: "/(modals)/cameraModal",
-          params: { purpose: selectedUploadType.doc },
-        });
-        break;
-      case "files":
-        handlePickDocument();
-        break;
-
-      case "gallery":
-        getPictureFromLibrary();
-        break;
-    }
-  }, [selectedUploadType]);
-
-  const handlePickImage = (type: "faceScan" | "cardScan") => {
-    setSelectedUploadType({
-      doc: type == "faceScan" ? "selfie" : "id",
-      method: "camera",
-    });
-  };
-
-  const handleCertificationUploadType = (type: UploadAction["method"]) => {
-    setSelectedUploadType({ doc: "certification", method: type });
-  };
-
-  const handlePickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        copyToCacheDirectory: true,
-        type: "application/pdf",
-      });
-
-      if (result.assets == null) {
-        return;
-      }
-      handleAddCert({ name: result.assets[0].name, uri: result.assets[0].uri });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleAddCert = (file: { name: string; uri: string }) => {
-    setCertifications((prev) => {
-      if (prev.length >= 5) return prev;
-      return [...prev, { ...file, id: Date.now().toString() }];
-    });
-  };
 
   const handleOpenUploadTypeModal = () => {
     setShowUploadTypeModal(true);
@@ -163,19 +91,103 @@ export default function GuideProfileScreen() {
     }
   };
 
-  const handleSubmit = () => {};
+  const handleUpload = async (
+    doc: "selfie" | "id" | "certification",
+    method: "camera" | "gallery" | "files",
+  ) => {
+    try {
+      let file: { uri: string; name: string; type: string } | null = null;
 
-  const getPictureFromLibrary = async () => {
-    if (permissionResponse) {
-      await requestPermission();
+      if (method === "camera") {
+        const facing = doc == "selfie" ? "front" : "back";
+        const photo = await openCamera({
+          facing,
+        });
+        if (!photo) return;
+        file = {
+          uri: photo.uri,
+          name: "Picture" + "." + photo.format,
+          type: "image/" + photo.format,
+        };
+      }
+
+      if (method === "gallery") {
+        const result = await ImagePicker.launchImageLibraryAsync({});
+        if (result.canceled || !result.assets) return;
+        file = {
+          uri: result.assets[0].uri,
+          name: result.assets[0].fileName ?? `Picture-${Date.now()}`,
+          type: result.assets[0].mimeType ?? "",
+        };
+      }
+
+      if (method === "files") {
+        const result = await DocumentPicker.getDocumentAsync({
+          copyToCacheDirectory: true,
+          type: "application/pdf",
+        });
+        if (!result.assets) return;
+        file = {
+          uri: result.assets[0].uri,
+          name: result.assets[0].name,
+          type: result.assets[0].mimeType || "application/pdf",
+        };
+      }
+
+      if (!file) return;
+
+      if (doc === "selfie") setSelfieUri(file);
+      else if (doc === "id") setIdUri(file);
+      else {
+        handleCloseUploadTypeModal();
+        setCertifications((prev) =>
+          prev.length >= 5
+            ? prev
+            : [...prev, { ...file, id: Date.now().toString() }],
+        );
+      }
+    } catch (e) {
+      console.error(e);
     }
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({});
-    if (result.canceled || result.assets == null) return;
-    handleAddCert({
-      name: result.assets[0].fileName ?? `Picture${certifications.length}`,
-      uri: result.assets[0].uri,
-    });
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      const data = {
+        languages: selectedLanguages.map((l) => l.toUpperCase()),
+        fee: fee,
+        city: city,
+        description: description,
+        expertise: selectedExpertise,
+      };
+      const formData = new FormData();
+      formData.append("data", JSON.stringify(data));
+      formData.append("selfie", {
+        uri: selfieUri?.uri,
+        name: selfieUri?.name,
+        type: selfieUri?.type,
+      } as any);
+      formData.append("govId", {
+        uri: idUri?.uri,
+        name: idUri?.name,
+        type: idUri?.type,
+      } as any);
+      certifications.forEach((c) => {
+        formData.append("certifications", {
+          uri: c.uri,
+          name: c.name,
+          type: c.type,
+        } as any);
+      });
+
+      await guideService.completeProfile(formData);
+      router.replace("/(guideScreens)/profileStatus");
+      setIsLoading(false);
+    } catch (error: any) {
+      setIsLoading(false);
+      console.log(error.message);
+    }
   };
 
   return (
@@ -305,11 +317,11 @@ export default function GuideProfileScreen() {
                 {/* Selfie Upload */}
                 <TouchableOpacity
                   style={styles.uploadBox}
-                  onPress={() => handlePickImage("faceScan")}
+                  onPress={() => handleUpload("selfie", "camera")}
                 >
                   {selfieUri ? (
                     <Image
-                      source={{ uri: selfieUri }}
+                      source={{ uri: selfieUri.uri }}
                       style={styles.selfieImage}
                     />
                   ) : (
@@ -323,11 +335,11 @@ export default function GuideProfileScreen() {
                 {/* Gov ID Upload */}
                 <TouchableOpacity
                   style={styles.uploadBox}
-                  onPress={() => handlePickImage("cardScan")}
+                  onPress={() => handleUpload("id", "camera")}
                 >
                   {idUri ? (
                     <Image
-                      source={{ uri: idUri }}
+                      source={{ uri: idUri.uri }}
                       style={styles.idImage}
                       resizeMode="cover"
                     />
@@ -430,7 +442,7 @@ export default function GuideProfileScreen() {
         <UploadTypeModal
           visible={showUploadTypeModal}
           onClose={handleCloseUploadTypeModal}
-          onSelect={handleCertificationUploadType}
+          onSelect={(method) => handleUpload("certification", method)}
         />
       </SafeAreaView>
     </View>

@@ -1,5 +1,5 @@
 import { useCamera } from "@/hooks/useCamera";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useSearchParams } from "expo-router/build/hooks";
 import { Check, RotateCcw } from "lucide-react-native";
@@ -39,17 +39,23 @@ function isPurposeKey(value: string): value is PurposeKey {
   return value in purposes;
 }
 
+function cameraFacing(value: string | null) {
+  return value == "front" ? "front" : "back";
+}
+
 export default function CameraScreen() {
   const params = useSearchParams();
   const rawPurpose = params.get("purpose");
+  const rawFacing = params.get("facing");
 
   const purpose: PurposeKey =
     rawPurpose && isPurposeKey(rawPurpose) ? rawPurpose : "default";
+  const facing: CameraType = cameraFacing(rawFacing);
 
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [isCameraOn, setIsCameraOn] = useState(true);
-  const { photo, setPhoto } = useCamera();
+  const { photo, setPhoto, resolvePhoto } = useCamera();
   const router = useRouter();
 
   useEffect(() => {
@@ -82,6 +88,11 @@ export default function CameraScreen() {
   };
 
   const onConfirmClick = () => {
+    resolvePhoto(photo);
+    onCloseModal();
+  };
+
+  const onCloseModal = () => {
     router.back();
   };
 
@@ -91,7 +102,7 @@ export default function CameraScreen() {
         <CameraHeader
           title={purposes[purpose].title}
           subtitle={purposes[purpose].subtitle}
-          onBack={() => router.back()}
+          onBack={onCloseModal}
         />
 
         <View style={styles.cameraWrapper}>
@@ -99,7 +110,7 @@ export default function CameraScreen() {
             ref={cameraRef}
             style={{ flex: 1 }}
             active={isCameraOn}
-            facing="front"
+            facing={facing}
             mirror
           />
 

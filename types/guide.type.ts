@@ -22,4 +22,7 @@ export interface Guide {
         duration: string;
         price: number;
     }>;
+    verificationStatus: GuideVerificationStatus
 }
+
+export type GuideVerificationStatus = "PENDING" | "REFUSED" | "APPROVED" | "UNVERIFIED"

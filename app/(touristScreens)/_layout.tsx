@@ -10,7 +10,10 @@ export default function RootLayout() {
       <Stack.Screen name="hub" />
       <Stack.Screen name="guides" />
       <Stack.Screen name="scanner" />
-      <Stack.Screen name="profile" options={{ presentation: "modal" }} />
+      <Stack.Screen
+        name="profile.tourist"
+        options={{ presentation: "modal" }}
+      />
     </Stack>
   );
 }

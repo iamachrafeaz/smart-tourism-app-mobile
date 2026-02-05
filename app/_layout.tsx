@@ -4,14 +4,15 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { AuthProvider } from "@/context/auth.context";
 import { CameraContextProvider } from "@/context/camera.context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import useAuth from "@/hooks/useAuth";
+import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
@@ -22,8 +23,8 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <CameraContextProvider>
           <AuthProvider>
-            <RootNavigator />
             <StatusBar style="light" />
+            <RootNavigator />
           </AuthProvider>
         </CameraContextProvider>
       </SafeAreaProvider>
@@ -32,21 +33,17 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { isLoggedIn } = useAuth();
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(touristScreens)" />
-      </Stack.Protected>
-      <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="(guideScreens)" />
-      </Stack.Protected>
-      <Stack.Screen
-        name="(modals)/cameraModal"
-        options={{ presentation: "modal" }}
-      />
-    </Stack>
-  );
+  useEffect(() => {
+    const inAuthGroup = segments[0] === "auth";
+
+    if (!user && !inAuthGroup && segments[0] !== undefined) {
+      router.replace("/auth/login");
+    }
+  }, [user, segments, isLoading]);
+
+  return <Slot />;
 }

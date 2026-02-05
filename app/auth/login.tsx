@@ -26,6 +26,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     await login(email, password);
+    router.replace("/");
   };
 
   return (

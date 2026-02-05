@@ -1,4 +1,4 @@
-import { UserRoleEnum } from "@/types/user.type";
+import { UserRole } from "@/types/user.type";
 import axiosInstance from "./axiosInstance";
 
 export const loginRequest = async (email: string, password: string) => {
@@ -84,11 +84,11 @@ export const completeProfileRequest = async (formData: any) => {
     }
 }
 
-export const chooseRoleRequest = async (registrationToken: string, role: UserRoleEnum) => {
+export const chooseRoleRequest = async (registrationToken: string, role: UserRole) => {
     try {
         const response = await axiosInstance.post('/auth/register/choose-role', {
             registrationToken,
-            role: UserRoleEnum[role]
+            role: role
         });
 
         return response.data;
@@ -96,3 +96,4 @@ export const chooseRoleRequest = async (registrationToken: string, role: UserRol
         throw error.response.data.error
     }
 }
+
