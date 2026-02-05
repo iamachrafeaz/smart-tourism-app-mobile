@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: Props) => {
       const token = response.token;
       await authStore.saveTokens(token);
 
-      const me = await authService.getMe();
+      const me = await authService.getMeRequest();
       setUser(me.user);
     } catch (e: any) {
       setError(e.message);
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: Props) => {
         const token = await authStore.getAccessToken();
         if (!token) return;
 
-        const profile = await authService.getMe();
+        const profile = await authService.getMeRequest();
         setUser(profile.user);
       } catch {
         await authStore.clearTokens();

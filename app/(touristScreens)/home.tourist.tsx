@@ -57,7 +57,7 @@ export default function HomeScreen({ language = "en" }: Props) {
               </Text>
             </View>
             <Pressable
-              onPress={() => router.push("/profile")}
+              onPress={() => router.push("/profile.tourist")}
               className="h-12 w-12 rounded-full border-2 border-white/20 overflow-hidden shadow-lg"
             >
               <Image
@@ -84,7 +84,7 @@ export default function HomeScreen({ language = "en" }: Props) {
           <Pressable
             className="rounded-[32px] mb-6 overflow-hidden relative shadow-orange-500/20 shadow-2xl"
             style={{ height: 180 }}
-            onPress={() => router.push("/(scanner)")}
+            onPress={() => router.push("/scanner")}
           >
             <LinearGradient
               colors={["#f97316", "#ea580c"]}
@@ -128,13 +128,13 @@ export default function HomeScreen({ language = "en" }: Props) {
               icon={<MessageCircle size={28} color="#fb923c" />}
               label="AI Guide"
               subLabel="Chat now"
-              onPress={() => router.push("/(chatbot)")}
+              onPress={() => router.push("/chatbot")}
             />
             <ActionCard
               icon={<Map size={28} color="#fb923c" />}
               label="Explore"
               subLabel="Map view"
-              onPress={() => router.push("/(experiences)")}
+              onPress={() => router.push("/experiences")}
             />
           </View>
 
@@ -148,21 +148,21 @@ export default function HomeScreen({ language = "en" }: Props) {
                 icon={<Users size={20} color="white" />}
                 title="Local Guides"
                 subtitle="Book experts near you"
-                onPress={() => router.push("/(guides)")}
+                onPress={() => router.push("/guides")}
               />
               <QuickRow
                 icon={<Compass size={20} color="white" />}
                 title="Hidden Gems"
                 subtitle="Secret spots & trails"
                 onPress={() => {
-                  router.push("/(modal)");
+                  router.push("/profile.tourist");
                 }}
               />
               <QuickRow
                 icon={<Menu size={20} color="white" />}
                 title="Cultural Hub"
                 subtitle="Events, food & history"
-                onPress={() => router.push("/(hub)")}
+                onPress={() => router.push("/hub")}
               />
             </View>
           </View>

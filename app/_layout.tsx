@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { AuthProvider } from "@/context/auth.context";
+import { CameraContextProvider } from "@/context/camera.context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import useAuth from "@/hooks/useAuth";
 import { StatusBar } from "expo-status-bar";
@@ -19,10 +20,12 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <RootNavigator />
-          <StatusBar style="light" />
-        </AuthProvider>
+        <CameraContextProvider>
+          <AuthProvider>
+            <RootNavigator />
+            <StatusBar style="light" />
+          </AuthProvider>
+        </CameraContextProvider>
       </SafeAreaProvider>
     </ThemeProvider>
   );
@@ -38,7 +41,12 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="auth" />
+        <Stack.Screen name="(guideScreens)" />
       </Stack.Protected>
+      <Stack.Screen
+        name="(modals)/cameraModal"
+        options={{ presentation: "modal" }}
+      />
     </Stack>
   );
 }

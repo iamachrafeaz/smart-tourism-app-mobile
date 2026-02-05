@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "myapp",
-    "slug": "myapp",
+    "name": "smart-tourism-app",
+    "slug": "smart-tourism-app",
     "version": "1.0.0",
     "extra": {
       "apiUrl": "http://192.168.11.107:50000"
