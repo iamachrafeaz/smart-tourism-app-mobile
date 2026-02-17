@@ -4,7 +4,8 @@
     "slug": "smart-tourism-app",
     "version": "1.0.0",
     "extra": {
-      "apiUrl": "http://192.168.11.107:50000"
+      "apiUrl": "http://192.168.11.114:50000",
+      "fastApiUrl": "http://192.168.11.114:8000"
     },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

@@ -1,3 +1,4 @@
+import { askChatbot } from "@/api/chatbotService";
 import { useRouter } from "expo-router";
 import {
   ArrowLeft,
@@ -8,6 +9,8 @@ import {
   User,
 } from "lucide-react-native";
 import React, { useRef, useState } from "react";
+import Markdown from "react-native-markdown-display";
+
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -46,7 +49,7 @@ export default function ChatScreen() {
     },
   ]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
     const userMsg: Message = {
@@ -56,22 +59,24 @@ export default function ChatScreen() {
       timestamp: new Date(),
     };
 
-    // 1. Add User Message
     setMessages((prev) => [...prev, userMsg]);
     setInputText("");
     setIsTyping(true);
 
-    // 2. Simulate Bot Response
-    setTimeout(() => {
+    try {
+      const botAnswer = await askChatbot(userMsg.text);
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "That sounds like a great plan! The medina in Fez is particularly beautiful this time of year. Would you like a list of sustainable riads nearby?",
+        text: botAnswer,
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      console.log(error);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -93,14 +98,18 @@ export default function ChatScreen() {
         <View
           style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleBot]}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isUser ? styles.textUser : styles.textBot,
-            ]}
+          <Markdown
+            style={{
+              body: {
+                ...styles.messageText,
+                ...(isUser ? styles.textUser : styles.textBot),
+              },
+              heading1: { fontSize: 22, fontWeight: "bold" },
+              link: { color: "blue", textDecorationLine: "underline" },
+            }}
           >
             {item.text}
-          </Text>
+          </Markdown>
           <Text
             style={[styles.timeText, isUser ? styles.timeUser : styles.timeBot]}
           >
@@ -113,7 +122,7 @@ export default function ChatScreen() {
 
         {isUser && (
           <View style={styles.userAvatar}>
-            <User size={16} color="#white" />
+            <User size={16} color="white" />
           </View>
         )}
       </View>
