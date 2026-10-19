@@ -60,3 +60,28 @@ This mobile application is part of the **Smart Tourism Ecosystem**:
    ```bash
    git clone https://github.com/iamachrafeaz/smart-tourism-app-mobile.git
    cd smart-tourism-app-mobile
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Configure your API base URL in app.json (under extra.apiUrl) or via .env:
+
+   ```json
+   {
+     "expo": {
+       "extra": {
+         "apiUrl": "http://<YOUR_LOCAL_IP>:5000"
+       }
+     }
+   }
+   ```
+
+4. Start the development server:
+   
+   ```bash
+   npx expo start
+   ```
